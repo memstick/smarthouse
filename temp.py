@@ -6,6 +6,10 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
+if len(sys.argv) != 3:
+    print('Usage: ./temp.py temp/kitchen.csv "Kitchen Heater"')
+    sys.exit(0)
+
 matplotlib.rcParams.update({'font.size': 22})
 
 fname = sys.argv[1]

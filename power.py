@@ -14,6 +14,10 @@ data = []
 
 cur_hour = None
 
+if len(sys.argv) != 3:
+    print('Usage: ./power.py temp/power_cappuccino.csv "Making two Cappuccinos"')
+    sys.exit(0)
+
 with open(fname) as tfile:
     testreader = csv.reader(tfile, delimiter=",")
     first = True
@@ -23,9 +27,11 @@ with open(fname) as tfile:
             first = False
             continue
 
+        print(row)
+
         date = row[0]
         try:
-            temp = float(row[1])
+            power = float(row[1])
         except ValueError:
             print("Ignoring entry: %s" % (row))
             continue
@@ -55,33 +61,50 @@ with open(fname) as tfile:
         n["hour"] = cur_hour
         n["min"] = int(minute)
         #n["sec"] = int(second)
-        n["temp"] = temp
+        n["power"] = power
 
         data.append(n)
 
-temps = [e["temp"] for e in data]
+powers = [e["power"] for e in data]
 
 hours = [e["hour"] for e in data]
 
 min_ = min( hours )
 max_ = max( hours )
 
-hours_t = range(int(round(min_)), int(round(max_)), 3)
-hours_l = [e % 24 for e in hours_t]
+if max_ - min_ >= 1:
+    hours_t = range(int(round(min_)), int(round(max_)), 3)
+    hours_l = [e % 24 for e in hours_t]
+else:
+    hours_t = hours
+    hours_l = hours
+
+durations = []
+for i in range(len(hours)):
+    try:
+        durations.append( (hours[i+1] - hours[i]) )
+    except IndexError:
+        break
+
+energy = 0
+for i in range(len(durations)):
+    energy += durations[i] * powers[i]
+
+print("Total energy: %.2f Wh" % (energy))
 
 print(hours_t)
 print(hours_l)
 
-print(len(temps))
+print(len(powers))
 print(len(hours))
 
 fig, ax = plt.subplots()
 
-ax.plot(hours, temps, label=sys.argv[2], lw=3.0, color="tab:cyan")
+ax.plot(hours, powers, label=sys.argv[2], lw=3.0, color="tab:cyan")
 #ax.fill_between(x, h0_low, h0_hi, alpha=0.1)
 
 # Add some text for labels, title and custom x-axis tick labels, etc.
-ax.set_ylabel('Measured Temperature [C]')
+ax.set_ylabel('Power [W]')
 ax.set_xlabel("Time of Day")
 #ax.set_title('Mean Hourly Consumption in %s' % (month))
 ax.set_xticks(hours_t)
